@@ -15,8 +15,7 @@ const Game: React.FC<Props> = ({setPage, page}) => {
 
     useEffect(() => {
         if(page === -1200) {
-            // @ts-ignore
-            ref.current.focus({ preventScroll: true })
+            mainRef.current.focus({ preventScroll: true })
         }
     }, [page]);
 
@@ -26,8 +25,10 @@ const Game: React.FC<Props> = ({setPage, page}) => {
     const [snake, setSnake] = useState([{x: 5, y: 8}, {x: 5, y: 9}, {x: 5, y: 10}])
     const [snakeState, setSnakeState] = useState<SnakeStateType>('PAUSE')
     const [score, setScore] = useState(0)
-    const [movementInterval, setMovementInterval] = useState(0)
     const [history, setHistory] = useState<number[]>([])
+
+    const mainRef = useRef(null)
+    const intervalRef = useRef(0)
 
     const newBug = () => {
         const newPos = {x: Math.floor(Math.random() * 30) + 1, y: Math.floor(Math.random() * 30) + 1}
@@ -62,7 +63,7 @@ const Game: React.FC<Props> = ({setPage, page}) => {
     }
 
     useEffect(() => {
-        clearInterval(movementInterval)
+        clearInterval(intervalRef.current)
         for (let i = 0; i < snake.length - 1; i++) {
             if ((snake[snake.length - 1].x === snake[i].x && snake[snake.length - 1].y === snake[i].y) || snake[snake.length - 1].x === 0 || snake[snake.length - 1].x === 31 || snake[snake.length - 1].y === 0 || snake[snake.length - 1].y === 31) {
                 gameOver()
@@ -71,30 +72,30 @@ const Game: React.FC<Props> = ({setPage, page}) => {
 
         switch (snakeState) {
             case 'UP':
-                setMovementInterval(setInterval(() => moveSnake(-1, 0), (5 - difficulty) * 40))
+                intervalRef.current = setInterval(() => moveSnake(-1, 0), (5 - difficulty) * 40)
                 break;
             case 'DOWN':
-                setMovementInterval(setInterval(() => moveSnake(1, 0), (5 - difficulty) * 40))
+                intervalRef.current = setInterval(() => moveSnake(1, 0), (5 - difficulty) * 40)
                 break;
             case 'RIGHT':
-                setMovementInterval(setInterval(() => moveSnake(0, 1), (5 - difficulty) * 40))
+                intervalRef.current = setInterval(() => moveSnake(0, 1), (5 - difficulty) * 40)
                 break;
             case 'LEFT':
-                setMovementInterval(setInterval(() => moveSnake(0, -1), (5 - difficulty) * 40))
+                intervalRef.current = setInterval(() => moveSnake(0, -1), (5 - difficulty) * 40)
                 break;
         }
     }, [snakeState, snake]);
 
     const gameOver = () => {
         setSnakeState('PAUSE');
-        clearInterval(movementInterval)
+        clearInterval(intervalRef.current)
         setBugPosition({x: 10, y: 20})
         setSnake([{x: 5, y: 8}, {x: 5, y: 9}, {x: 5, y: 10}])
         setHistory([score, ...history])
         setScore(0)
     }
 
-    const handleKeydown = (e: any) => {
+    const handleKeydown = (e: React.KeyboardEvent) => {
         switch (e.key) {
             case 'Escape':
                 setPage(-600)
@@ -126,10 +127,8 @@ const Game: React.FC<Props> = ({setPage, page}) => {
         }
     }
 
-    const ref = useRef(null)
-
     return (
-        <div className='game' ref={ref} onKeyDown={handleKeydown} tabIndex={0}>
+        <div className='game' ref={mainRef} onKeyDown={handleKeydown} tabIndex={0}>
             <div className={snakeState === 'PAUSE' ? 'game__overlay show' : 'game__overlay'}>
                 <div className='flex' style={{justifyContent: 'center', margin: '20px 0'}}>
                     <div className='arrow-header'>Start with keyboard:</div>
